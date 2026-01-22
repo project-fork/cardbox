@@ -28,9 +28,11 @@ class AuthService {
   Future<bool> authenticate() async {
     return AuthService.instance.setAuthenticated = await auth.authenticate(
       localizedReason: 'Authenticate',
-      useErrorDialogs: true,
-      stickyAuth: true,
-      biometricOnly: true,
+      options: const AuthenticationOptions(
+        useErrorDialogs: true,
+        stickyAuth: true,
+        biometricOnly: true,
+      ),
     );
   }
 }

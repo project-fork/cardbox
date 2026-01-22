@@ -309,7 +309,7 @@ class _CreditCardWidgetState extends State<CreditCardWidget>
 
   _buildBankFrontContainer() {
     final TextStyle defaultTextStyle =
-        Theme.of(context).textTheme.headline6!.merge(
+        Theme.of(context).textTheme.titleLarge!.merge(
               const TextStyle(
                 color: Colors.white70,
                 fontFamily: 'halter',
@@ -404,7 +404,7 @@ class _CreditCardWidgetState extends State<CreditCardWidget>
 
   _buildCardFrontContainer() {
     final TextStyle defaultTextStyle =
-        Theme.of(context).textTheme.headline6!.merge(
+        Theme.of(context).textTheme.titleLarge!.merge(
               const TextStyle(
                 color: Colors.white70,
                 fontFamily: 'halter',
@@ -513,7 +513,7 @@ class _CreditCardWidgetState extends State<CreditCardWidget>
 
   _buildMobileFrontContainer() {
     final TextStyle defaultTextStyle =
-        Theme.of(context).textTheme.headline6!.merge(
+        Theme.of(context).textTheme.titleLarge!.merge(
               const TextStyle(
                 color: Colors.white70,
                 fontFamily: 'halter',
@@ -606,7 +606,7 @@ class _CreditCardWidgetState extends State<CreditCardWidget>
 
   _buildInternetFrontContainer() {
     final TextStyle defaultTextStyle =
-        Theme.of(context).textTheme.headline6!.merge(
+        Theme.of(context).textTheme.titleLarge!.merge(
               const TextStyle(
                 color: Colors.white70,
                 fontFamily: 'halter',
@@ -755,7 +755,7 @@ class _CreditCardWidgetState extends State<CreditCardWidget>
 
   _buildUpiFrontContainer() {
     final TextStyle defaultTextStyle =
-        Theme.of(context).textTheme.headline6!.merge(
+        Theme.of(context).textTheme.titleLarge!.merge(
               const TextStyle(
                 color: Colors.white70,
                 fontFamily: 'halter',
@@ -863,7 +863,7 @@ class _CreditCardWidgetState extends State<CreditCardWidget>
 
   Widget _buildCardBackContainer() {
     final TextStyle defaultTextStyle =
-        Theme.of(context).textTheme.headline6!.merge(
+        Theme.of(context).textTheme.titleLarge!.merge(
               const TextStyle(
                 color: Colors.white70,
                 fontFamily: 'halter',
