@@ -1,0 +1,202 @@
+# Flutter CI/CD 构建工作流
+# 支持 Android APK、App Bundle、Web 和 iOS 构建
+
+name: Flutter CI
+
+on:
+  push:
+    branches: [main, master, develop, github_action]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [main, master, develop, github_action]
+
+  # 允许手动触发工作流
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.16.0'
+  JAVA_VERSION: '17'
+
+jobs:
+  # ============================================================
+  # 分析和测试
+  # ============================================================
+  analyze:
+    name: 📊 分析 & 测试
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🎯 设置 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 获取依赖
+        run: flutter pub get
+
+      - name: 🔍 分析代码
+        run: flutter analyze --no-fatal-infos
+
+      - name: 🧪 运行测试
+        run: flutter test
+
+  # ============================================================
+  # Android 构建
+  # ============================================================
+  build-android:
+    name: 🤖 构建 Android
+    needs: analyze
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: ☕ 设置 Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: 🎯 设置 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 获取依赖
+        run: flutter pub get
+
+      - name: 🏗️ 构建 APK (Debug)
+        run: flutter build apk --debug
+
+      - name: 🏗️ 构建 APK (Release)
+        run: flutter build apk --release
+
+      - name: 🏗️ 构建 App Bundle
+        run: flutter build appbundle --release
+
+      - name: 📤 上传 Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
+
+      - name: 📤 上传 Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+      - name: 📤 上传 App Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-bundle
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+  # ============================================================
+  # Web 构建
+  # ============================================================
+  build-web:
+    name: 🌐 构建 Web
+    needs: analyze
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🎯 设置 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 获取依赖
+        run: flutter pub get
+
+      - name: 🏗️ 构建 Web
+        run: flutter build web --release --base-href "/"
+
+      - name: 📤 上传 Web 产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: build/web
+          retention-days: 30
+
+  # ============================================================
+  # iOS 构建 (仅在 macOS 运行)
+  # ============================================================
+  build-ios:
+    name: 🍎 构建 iOS
+    needs: analyze
+    runs-on: macos-latest
+    
+    steps:
+      - name: 📥 检出代码
+        uses: actions/checkout@v4
+
+      - name: 🎯 设置 Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 获取依赖
+        run: flutter pub get
+
+      - name: 🏗️ 构建 iOS (无签名)
+        run: flutter build ios --release --no-codesign
+
+      - name: 📤 上传 iOS 产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build
+          path: build/ios/iphoneos
+          retention-days: 30
+
+  # ============================================================
+  # Release 构建 (仅在 tag 推送时触发)
+  # ============================================================
+  release:
+    name: 🚀 创建 Release
+    needs: [build-android, build-web, build-ios]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+      - name: 📥 下载所有产物
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: 📦 打包产物
+        run: |
+          cd artifacts
+          zip -r ../web-build.zip web-build/
+          zip -r ../ios-build.zip ios-build/
+
+      - name: 🚀 创建 GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/release-apk/app-release.apk
+            artifacts/app-bundle/app-release.aab
+            web-build.zip
+            ios-build.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
